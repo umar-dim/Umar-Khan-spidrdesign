@@ -9,6 +9,13 @@ interface FormData {
 	spidrPin: string;
 }
 
+interface Errors {
+	phone?: string;
+	email?: string;
+	spidrPin?: string;
+	guess?: string;
+}
+
 export default function Form() {
 	const [formData, setFormData] = useState<FormData>({
 		firstName: "",
@@ -18,6 +25,7 @@ export default function Form() {
 		guess: "",
 		spidrPin: "",
 	});
+	const [errors, setErrors] = useState<Errors>({});
 
 	const formatSpidrPin = (value: string): string => {
 		const digits = value.replace(/\D/g, "").slice(0, 16);
@@ -32,18 +40,60 @@ export default function Form() {
 		}));
 	};
 
+	const validateEmail = (email: string): boolean => {
+		const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		return regex.test(email);
+	};
+
+	const validatePhone = (phone: string): boolean => {
+		const digits = phone.replace(/\D/g, "");
+		return digits.length >= 10 && digits.length <= 15;
+	};
+
+	const validateSpidrPin = (pin: string): boolean => {
+		const digits = pin.replace(/\D/g, "");
+		return digits.length === 16;
+	};
+
+	const validateGuess = (guess: string): boolean => {
+		const num = Number(guess);
+		return !isNaN(num) && num >= 0;
+	};
+
 	const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
+		const newErrors: Errors = {};
+
+		if (!validateEmail(formData.email)) {
+			newErrors.email = "Please enter a valid email address.";
+		}
+		if (!validatePhone(formData.phone)) {
+			newErrors.phone = "Please enter a valid phone number (10–15 digits).";
+		}
+		if (!validateSpidrPin(formData.spidrPin)) {
+			newErrors.spidrPin = "PIN must be exactly 16 digits.";
+		}
+		if (!validateGuess(formData.guess)) {
+			newErrors.guess = "Guess must be 0 or greater.";
+		}
+
+		if (Object.keys(newErrors).length > 0) {
+			setErrors(newErrors);
+			return;
+		}
+
+		setErrors({});
 		console.log("Form Data:", formData);
 	};
 
 	return (
 		<div className="min-h-screen flex items-center justify-center bg-neutral-900 text-white font-raleway">
 			<div className="w-full max-w-lg bg-neutral-800 bg-opacity-80 p-8 rounded-lg shadow-lg">
-				<h1 className="text-3xl font-light mb-6 text-center border-b border-[#56acbd] pb-4 text-[#56acbd]">
+				<h1 className="text-3xl font-light mb-6 text-center  pb-4 text-[#56acbd]">
 					Guess the Air Fryer Cost
+					<span className="block w-24 h-px bg-[#56acbd] mx-auto mt-2"></span>
 				</h1>
-				<form onSubmit={handleSubmit} className="space-y-5">
+				<form onSubmit={handleSubmit} className="space-y-5 flex flex-col">
 					<div>
 						<label className="block text-sm mb-1">First Name</label>
 						<input
@@ -74,8 +124,13 @@ export default function Form() {
 							value={formData.phone}
 							onChange={handleChange}
 							required
-							className="w-full bg-transparent border-b border-[#56acbd] focus:border-accent transition p-2 outline-none"
+							className={`w-full bg-transparent border-b ${
+								errors.phone ? "border-red-500" : "border-[#56acbd]"
+							} focus:border-accent transition p-2 outline-none`}
 						/>
+						{errors.phone && (
+							<p className="text-red-400 text-xs mt-1">{errors.phone}</p>
+						)}
 					</div>
 					<div>
 						<label className="block text-sm mb-1">Email Address</label>
@@ -85,8 +140,13 @@ export default function Form() {
 							value={formData.email}
 							onChange={handleChange}
 							required
-							className="w-full bg-transparent border-b border-[#56acbd] focus:border-accent transition p-2 outline-none"
+							className={`w-full bg-transparent border-b ${
+								errors.email ? "border-red-500" : "border-[#56acbd]"
+							} focus:border-accent transition p-2 outline-none`}
 						/>
+						{errors.email && (
+							<p className="text-red-400 text-xs mt-1">{errors.email}</p>
+						)}
 					</div>
 					<div>
 						<label className="block text-sm mb-1">Guess the Cost ($)</label>
@@ -96,8 +156,14 @@ export default function Form() {
 							value={formData.guess}
 							onChange={handleChange}
 							required
-							className="w-full bg-transparent border-b border-[#56acbd] focus:border-accent transition p-2 outline-none"
+							className={`w-full bg-transparent border-b ${
+								errors.guess ? "border-red-500" : "border-[#56acbd]"
+							} focus:border-accent transition p-2 outline-none`}
+							min="0"
 						/>
+						{errors.guess && (
+							<p className="text-red-400 text-xs mt-1">{errors.guess}</p>
+						)}
 					</div>
 					<div>
 						<label className="block text-sm mb-1">Very Secret Spidr PIN</label>
@@ -108,12 +174,23 @@ export default function Form() {
 							onChange={handleChange}
 							placeholder="####-####-####-####"
 							required
-							className="w-full bg-transparent border-b border-[#56acbd] focus:border-accent transition p-2 outline-none"
+							className={`w-full bg-transparent border-b ${
+								errors.spidrPin ? "border-red-500" : "border-[#56acbd]"
+							} focus:border-accent transition p-2 outline-none`}
 						/>
+						{errors.spidrPin && (
+							<p className="text-red-400 text-xs mt-1">{errors.spidrPin}</p>
+						)}
 					</div>
-					<button
+					{/* <button
 						type="submit"
 						className="w-full mt-4 py-2 bg-accent text-[#56acbd] font-medium rounded hover:bg-accent-dark transition"
+					>
+						Submit
+					</button> */}
+					<button
+						type="submit"
+            className="mt-4 mx-auto px-3 py-1.5 text-sm font-normal text-white text-center bg-transparent border border-white rounded-none cursor-pointer transition hover:bg-[rgba(0,0,0,0.6)] hover:text-[#56acbd] hover:border-[#56acbd]"
 					>
 						Submit
 					</button>
